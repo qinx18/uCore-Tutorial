@@ -44,6 +44,8 @@ struct proc {
 	struct proc *parent; // Parent process
 	uint64 exit_code;
 	struct file *files[FD_BUFFER_SIZE]; //File descriptor table, using to record the files opened by the process
+	uint64 program_brk;
+	uint64 heap_bottom;
 };
 
 int cpuid();
@@ -62,5 +64,7 @@ int init_stdio(struct proc *);
 int push_argv(struct proc *, char **);
 // swtch.S
 void swtch(struct context *, struct context *);
+
+int growproc(int n);
 
 #endif // PROC_H
