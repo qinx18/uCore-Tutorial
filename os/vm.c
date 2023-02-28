@@ -364,3 +364,47 @@ int either_copyin(int user_src, uint64 src, char *dst, uint64 len)
 		return 0;
 	}
 }
+// Allocate PTEs and physical memory to grow process from oldsz to
+// newsz, which need not be page aligned.  Returns new size or 0 on error.
+uint64 uvmalloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz, int xperm)
+{
+        char *mem;
+        uint64 a;
+
+        if(newsz < oldsz)
+                return oldsz;
+
+        oldsz = PGROUNDUP(oldsz);
+        for(a = oldsz; a < newsz; a += PGSIZE){
+                mem = kalloc();
+                if(mem == 0){
+                        uvmdealloc(pagetable, a, oldsz);
+                        return 0;
+                }
+                memset(mem, 0, PGSIZE);
+                if(mappages(pagetable, a, PGSIZE, (uint64)mem, PTE_R|PTE_U|xperm) != 0){
+                        kfree(mem);
+                        uvmdealloc(pagetable, a, oldsz);
+                        return 0;
+                }
+        }
+        return newsz;
+}
+
+// Deallocate user pages to bring the process size from oldsz to
+// newsz.  oldsz and newsz need not be page-aligned, nor does newsz
+// need to be less than oldsz.  oldsz can be larger than the actual
+// process size.  Returns the new process size.
+uint64 uvmdealloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz)
+{
+        if(newsz >= oldsz)
+                return oldsz;
+
+        if(PGROUNDUP(newsz) < PGROUNDUP(oldsz)){
+                int npages = (PGROUNDUP(oldsz) - PGROUNDUP(newsz)) / PGSIZE;
+                uvmunmap(pagetable, PGROUNDUP(newsz), npages, 1);
+        }
+
+        return newsz;
+}
+
