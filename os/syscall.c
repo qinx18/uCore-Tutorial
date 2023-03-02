@@ -146,6 +146,18 @@ uint64 sys_wait(int pid, uint64 va)
 	return wait(pid, code);
 }
 
+uint64 sys_spawn(uint64 va)
+{
+	// TODO: your job is to complete the sys call
+	return -1;
+}
+
+uint64 sys_set_priority(long long prio)
+{
+	// TODO: your job is to complete the sys call
+	return -1;
+}
+
 uint64 sys_pipe(uint64 fdarray)
 {
 	struct proc *p = curr_proc();
@@ -203,12 +215,31 @@ uint64 sys_close(int fd)
 
 uint64 sys_sbrk(int n)
 {
-        uint64 addr;
-        struct proc *p = curr_proc();
-        addr = p->program_brk;
-        if(growproc(n) < 0)
-                return -1;
-        return addr;
+	uint64 addr;
+	struct proc *p = curr_proc();
+	addr = p->program_brk;
+	if (growproc(n) < 0)
+		return -1;
+	return addr;
+}
+
+int sys_fstat(int fd, uint64 stat)
+{
+	//TODO: your job is to complete the syscall
+	return -1;
+}
+
+int sys_linkat(int olddirfd, uint64 oldpath, int newdirfd, uint64 newpath,
+	       uint64 flags)
+{
+	//TODO: your job is to complete the syscall
+	return -1;
+}
+
+int sys_unlinkat(int dirfd, uint64 name, uint64 flags)
+{
+	//TODO: your job is to complete the syscall
+	return -1;
 }
 
 extern char trap_page[];
@@ -261,9 +292,20 @@ void syscall()
 	case SYS_pipe2:
 		ret = sys_pipe(args[0]);
 		break;
+	case SYS_fstat:
+		ret = sys_fstat(args[0], args[1]);
+		break;
+	case SYS_linkat:
+		ret = sys_linkat(args[0], args[1], args[2], args[3], args[4]);
+		break;
+	case SYS_unlinkat:
+		ret = sys_unlinkat(args[0], args[1], args[2]);
+	case SYS_spawn:
+		ret = sys_spawn(args[0]);
+		break;
 	case SYS_sbrk:
-                ret = sys_sbrk(args[0]);
-                break;
+		ret = sys_sbrk(args[0]);
+		break;
 	default:
 		ret = -1;
 		errorf("unknown syscall %d", id);

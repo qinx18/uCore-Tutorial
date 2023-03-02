@@ -4,7 +4,7 @@
 #include "fs.h"
 #include "proc.h"
 
-//This is a system-level open file table that holds open files of all process. 
+//This is a system-level open file table that holds open files of all process.
 struct file filepool[FILEPOOLSIZE];
 
 //Abstract the stdio into a file.
@@ -73,11 +73,11 @@ int show_all_files()
 static struct inode *create(char *path, short type)
 {
 	struct inode *ip, *dp;
-	dp = root_dir();
+	dp = root_dir(); //Remember that the root_inode is open in this step,so it needs closing then.
 	ivalid(dp);
 	if ((ip = dirlookup(dp, path, 0)) != 0) {
 		warnf("create a exist file\n");
-		iput(dp);
+		iput(dp); //Close the root_inode
 		ivalid(ip);
 		if (type == T_FILE && ip->type == T_FILE)
 			return ip;
@@ -87,7 +87,7 @@ static struct inode *create(char *path, short type)
 	if ((ip = ialloc(dp->dev, type)) == 0)
 		panic("create: ialloc");
 
-	tracef("create dinod and inode type = %d\n", type);
+	tracef("create dinode and inode type = %d\n", type);
 
 	ivalid(ip);
 	iupdate(ip);
